@@ -1,6 +1,41 @@
 'use client';
 
+import { useState } from "react";
+import Swal from "sweetalert2";
+import axios from 'axios'
+import config from "../config";
+
 export default function Page() {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+
+    const signin = async () => {
+        try {
+            const payload = {
+                username: username,
+                password: password
+            }
+
+            const res = await axios.post(config.apiServer + '/api/user/signIn', payload);
+
+            if (res.data.token !== undefined) {
+                localStorage.setItem(config.token, res.data.token);
+            } else {
+                Swal.fire({
+                    title: 'ตรวจ username',
+                    text: 'username ไม่ถูกต้อง',
+                    icon: 'error'
+                })
+            }
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
     return (
         <div className="login-box">
             <div className="login-logo">
@@ -10,9 +45,12 @@ export default function Page() {
                 <div className="card-body login-card-body">
                     <p className="login-box-msg">Sign in to start your session</p>
 
-                    <form action="../../index3.html" method="post">
+                    <div>
                         <div className="input-group mb-3">
-                            <input type="email" className="form-control" placeholder="Email" />
+                            <input
+                                className="form-control"
+                                placeholder="Email"
+                                onChange={e => setUsername(e.target.value)} />
                             <div className="input-group-append">
                                 <div className="input-group-text">
                                     <span className="fas fa-envelope"></span>
@@ -20,7 +58,11 @@ export default function Page() {
                             </div>
                         </div>
                         <div className="input-group mb-3">
-                            <input type="password" className="form-control" placeholder="Password" />
+                            <input
+                                type="password"
+                                className="form-control"
+                                placeholder="Password"
+                                onChange={e => setPassword(e.target.value)} />
                             <div className="input-group-append">
                                 <div className="input-group-text">
                                     <span className="fas fa-lock"></span>
@@ -37,10 +79,16 @@ export default function Page() {
                                 </div>
                             </div>
                             <div className="col-4">
-                                <button type="submit" className="btn btn-primary btn-block">Sign In</button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary btn-block"
+                                    onClick={signin}
+                                >
+                                    Sign In
+                                </button>
                             </div>
                         </div>
-                    </form>
+                    </div>
 
                     <div className="social-auth-links text-center mb-3">
                         <p>- OR -</p>
