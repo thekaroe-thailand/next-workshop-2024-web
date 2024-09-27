@@ -17,7 +17,7 @@ export default function RootLayout({
       <head>
         <title>AdminLTE 3 | Dashboard</title>
       </head>
-      <body>
+      <body className="hold-transition sidebar-mini layout-fixed">
         {children}
       </body>
     </html>
