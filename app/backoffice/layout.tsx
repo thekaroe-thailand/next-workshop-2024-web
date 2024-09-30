@@ -20,7 +20,7 @@ export default function DashboardLayout({
                     <div className="content-wrapper">
                         <section className="content">
                             <div className="container-fluid">
-                                My Content
+                                {children}
                             </div>
                         </section>
                     </div>
