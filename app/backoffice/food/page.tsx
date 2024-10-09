@@ -154,6 +154,16 @@ export default function Page() {
         setImg(item.img);
     }
 
+    const clearForm = () => {
+        setId(0);
+        setName('');
+        setRemark('');
+        setPrice(0);
+        setFoodType('food');
+        setImg('');
+        (document.getElementById('myFile') as HTMLInputElement).value = '';
+    }
+
     return (
         <>
             <div className="mt-3 card">
@@ -162,6 +172,7 @@ export default function Page() {
                     <button className="btn btn-primary"
                         data-bs-toggle="modal"
                         data-bs-target="#modalFood"
+                        onClick={clearForm}
                     >
                         <i className="fas fa-plus me-2"></i>
                         เพิ่มรายการ
@@ -223,7 +234,7 @@ export default function Page() {
                 {img != '' &&
                     <img className="mb-2 img-fluid" src={config.apiServer + '/uploads/' + img} alt={name} width="100" />
                 }
-                <input type="file" className="form-control" onChange={e => handleSelectedFile(e)} />
+                <input type="file" id="myFile" className="form-control" onChange={e => handleSelectedFile(e)} />
 
                 <div className="mt-3">ชื่ออาหาร</div>
                 <input className="form-control" onChange={(e) => setName(e.target.value)} value={name} />

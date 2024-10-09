@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import config from "@/app/config";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -8,9 +8,13 @@ import Swal from "sweetalert2";
 export default function Page() {
     const [table, setTable] = useState(1);
     const [foods, setFoods] = useState([]);
+    const [saleTempDetails, setSaleTempDetails] = useState([]);
+    const myRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         getFoods();
+        fetchDataSaleTemp();
+        (myRef.current as HTMLInputElement).focus();
     }, []);
 
     const getFoods = async () => {
@@ -48,6 +52,20 @@ export default function Page() {
             }
 
             await axios.post(config.apiServer + '/api/saleTemp/create', payload);
+            fetchDataSaleTemp();
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const fetchDataSaleTemp = async () => {
+        try {
+            const res = await axios.get(config.apiServer + '/api/saleTemp/list');
+            setSaleTempDetails(res.data.results[0].SaleTempDetails);
         } catch (e: any) {
             Swal.fire({
                 title: 'error',
@@ -67,6 +85,7 @@ export default function Page() {
                             <div className="input-group">
                                 <div className="input-group-text">โต้ะ</div>
                                 <input
+                                    ref={myRef}
                                     type="text"
                                     className="form-control"
                                     value={table}
@@ -121,30 +140,44 @@ export default function Page() {
                                 0.00
                             </div>
 
-                            <div className="d-grid mt-2">
-                                <div className="card">
-                                    <div className="card-body">
-                                        <div className="fw-bold">Food Name</div>
-                                        <div>100 x 2 = 200</div>
-                                    </div>
-                                    <div className="card-footer p-1">
-                                        <div className="row g-1">
-                                            <div className="col-md-6">
-                                                <button className="btn btn-danger btn-block">
-                                                    <i className="fa fa-times me-2"></i>
-                                                    ยกเลิก
-                                                </button>
+                            {saleTempDetails.map((item: any) =>
+                                <div className="d-grid mt-2">
+                                    <div className="card">
+                                        <div className="card-body">
+                                            <div className="fw-bold">{item.Food.name}</div>
+                                            <div>{item.Food.price} x 1 = {item.Food.price * 1}</div>
+
+                                            <div className="mt-1">
+                                                <div className="input-group">
+                                                    <button className="input-group-text btn btn-primary">
+                                                        <i className="fa fa-minus"></i>
+                                                    </button>
+                                                    <input type="text" className="form-control text-center fw-bold" value="1" disabled />
+                                                    <button className="input-group-text btn btn-primary">
+                                                        <i className="fa fa-plus"></i>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="col-md-6">
-                                                <button className="btn btn-success btn-block">
-                                                    <i className="fa fa-cog me-2"></i>
-                                                    แก้ไข
-                                                </button>
+                                        </div>
+                                        <div className="card-footer p-1">
+                                            <div className="row g-1">
+                                                <div className="col-md-6">
+                                                    <button className="btn btn-danger btn-block">
+                                                        <i className="fa fa-times me-2"></i>
+                                                        ยกเลิก
+                                                    </button>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <button className="btn btn-success btn-block">
+                                                        <i className="fa fa-cog me-2"></i>
+                                                        แก้ไข
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
