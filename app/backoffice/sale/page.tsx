@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 export default function Page() {
     const [table, setTable] = useState(1);
     const [foods, setFoods] = useState([]);
-    const [saleTempDetails, setSaleTempDetails] = useState([]);
+    const [saleTemps, setSaleTemps] = useState([]);
     const myRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -65,7 +65,74 @@ export default function Page() {
     const fetchDataSaleTemp = async () => {
         try {
             const res = await axios.get(config.apiServer + '/api/saleTemp/list');
-            setSaleTempDetails(res.data.results[0].SaleTempDetails);
+            setSaleTemps(res.data.results);
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const removeSaleTemp = async (id: number) => {
+        try {
+            const button = await Swal.fire({
+                title: 'คุณต้องการลบรายการนี้ใช่หรือไม่?',
+                icon: 'warning',
+                showCancelButton: true,
+                showConfirmButton: true
+            });
+
+            if (button.isConfirmed) {
+                await axios.delete(config.apiServer + '/api/saleTemp/remove/' + id);
+                fetchDataSaleTemp();
+            }
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const removeAllSaleTemp = async () => {
+        try {
+            const button = await Swal.fire({
+                title: 'คุณต้องการลบรายการนี้ใช่หรือไม่?',
+                icon: 'warning',
+                showCancelButton: true,
+                showConfirmButton: true
+            });
+
+            if (button.isConfirmed) {
+                const payload = {
+                    tableNo: table,
+                    userId: Number(localStorage.getItem('next_user_id'))
+                }
+
+                await axios.delete(config.apiServer + '/api/saleTemp/removeAll', { data: payload });
+                fetchDataSaleTemp();
+            }
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const updateQty = async (id: number, qty: number) => {
+        try {
+            const payload = {
+                qty: qty,
+                id: id
+            }
+
+            await axios.put(config.apiServer + '/api/saleTemp/updateQty', payload);
+            fetchDataSaleTemp();
         } catch (e: any) {
             Swal.fire({
                 title: 'error',
@@ -106,7 +173,7 @@ export default function Page() {
                                 <i className="fa fa-list me-2"></i>
                                 ทั้งหมด
                             </button>
-                            <button className="btn btn-danger">
+                            <button disabled={saleTemps.length === 0} className="btn btn-danger" onClick={() => removeAllSaleTemp()}>
                                 <i className="fa fa-times me-2"></i>
                                 ล้างรายการ
                             </button>
@@ -140,20 +207,20 @@ export default function Page() {
                                 0.00
                             </div>
 
-                            {saleTempDetails.map((item: any) =>
+                            {saleTemps.map((item: any) =>
                                 <div className="d-grid mt-2">
                                     <div className="card">
                                         <div className="card-body">
                                             <div className="fw-bold">{item.Food.name}</div>
-                                            <div>{item.Food.price} x 1 = {item.Food.price * 1}</div>
+                                            <div>{item.Food.price} x {item.qty} = {item.Food.price * item.qty}</div>
 
                                             <div className="mt-1">
                                                 <div className="input-group">
-                                                    <button className="input-group-text btn btn-primary">
+                                                    <button className="input-group-text btn btn-primary" onClick={e => updateQty(item.id, item.qty - 1)}>
                                                         <i className="fa fa-minus"></i>
                                                     </button>
-                                                    <input type="text" className="form-control text-center fw-bold" value="1" disabled />
-                                                    <button className="input-group-text btn btn-primary">
+                                                    <input type="text" className="form-control text-center fw-bold" value={item.qty} disabled />
+                                                    <button className="input-group-text btn btn-primary" onClick={e => updateQty(item.id, item.qty + 1)}>
                                                         <i className="fa fa-plus"></i>
                                                     </button>
                                                 </div>
@@ -162,7 +229,8 @@ export default function Page() {
                                         <div className="card-footer p-1">
                                             <div className="row g-1">
                                                 <div className="col-md-6">
-                                                    <button className="btn btn-danger btn-block">
+                                                    <button onClick={e => removeSaleTemp(item.id)}
+                                                        className="btn btn-danger btn-block">
                                                         <i className="fa fa-times me-2"></i>
                                                         ยกเลิก
                                                     </button>
