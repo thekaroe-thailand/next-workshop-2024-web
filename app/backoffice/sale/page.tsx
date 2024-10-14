@@ -4,11 +4,17 @@ import { useEffect, useState, useRef } from "react"
 import config from "@/app/config";
 import axios from "axios";
 import Swal from "sweetalert2";
+import MyModal from "../components/MyModal";
 
 export default function Page() {
     const [table, setTable] = useState(1);
     const [foods, setFoods] = useState([]);
     const [saleTemps, setSaleTemps] = useState([]);
+    const [amount, setAmount] = useState(0);
+    const [tastes, setTastes] = useState([]);
+    const [sizes, setSizes] = useState([]);
+    const [saleTempDetails, setSaleTempDetails] = useState([]);
+
     const myRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -16,6 +22,15 @@ export default function Page() {
         fetchDataSaleTemp();
         (myRef.current as HTMLInputElement).focus();
     }, []);
+
+    const sumAmount = (saleTemps: any) => {
+        let sum = 0;
+        saleTemps.forEach((item: any) => {
+            sum += item.Food.price * item.qty;
+        });
+
+        setAmount(sum);
+    }
 
     const getFoods = async () => {
         try {
@@ -66,6 +81,7 @@ export default function Page() {
         try {
             const res = await axios.get(config.apiServer + '/api/saleTemp/list');
             setSaleTemps(res.data.results);
+            sumAmount(res.data.results);
         } catch (e: any) {
             Swal.fire({
                 title: 'error',
@@ -142,6 +158,44 @@ export default function Page() {
         }
     }
 
+    const openModalEdit = (item: any) => {
+        genereateSaleTempDetail(item.id);
+        fetchDataSaleTempInfo(item.id);
+    }
+
+    const genereateSaleTempDetail = async (saleTempId: number) => {
+        try {
+            const payload = {
+                saleTempId: saleTempId
+            }
+
+            await axios.post(config.apiServer + '/api/saleTemp/generateSaleTempDetail', payload);
+            await fetchDataSaleTemp();
+            fetchDataSaleTempInfo(saleTempId);
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const fetchDataSaleTempInfo = async (saleTempId: number) => {
+        try {
+            const res = await axios.get(config.apiServer + '/api/saleTemp/info/' + saleTempId);
+            setSaleTempDetails(res.data.results.SaleTempDetails);
+            setTastes(res.data.results.Food.FoodType?.Tastes || []);
+            setSizes(res.data.results.Food.FoodType?.FoodSizes || []);
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
     return (
         <>
             <div className="card mt-3">
@@ -204,7 +258,7 @@ export default function Page() {
 
                         <div className="col-md-3">
                             <div className="alert p-3 text-end h1 text-white bg-dark">
-                                0.00
+                                {amount.toLocaleString('th-TH')}
                             </div>
 
                             {saleTemps.map((item: any) =>
@@ -216,11 +270,11 @@ export default function Page() {
 
                                             <div className="mt-1">
                                                 <div className="input-group">
-                                                    <button className="input-group-text btn btn-primary" onClick={e => updateQty(item.id, item.qty - 1)}>
+                                                    <button disabled={item.SaleTempDetails.length > 0} className="input-group-text btn btn-primary" onClick={e => updateQty(item.id, item.qty - 1)}>
                                                         <i className="fa fa-minus"></i>
                                                     </button>
                                                     <input type="text" className="form-control text-center fw-bold" value={item.qty} disabled />
-                                                    <button className="input-group-text btn btn-primary" onClick={e => updateQty(item.id, item.qty + 1)}>
+                                                    <button disabled={item.SaleTempDetails.length > 0} className="input-group-text btn btn-primary" onClick={e => updateQty(item.id, item.qty + 1)}>
                                                         <i className="fa fa-plus"></i>
                                                     </button>
                                                 </div>
@@ -236,7 +290,11 @@ export default function Page() {
                                                     </button>
                                                 </div>
                                                 <div className="col-md-6">
-                                                    <button className="btn btn-success btn-block">
+                                                    <button
+                                                        onClick={e => openModalEdit(item)}
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalEdit"
+                                                        className="btn btn-success btn-block">
                                                         <i className="fa fa-cog me-2"></i>
                                                         แก้ไข
                                                     </button>
@@ -250,6 +308,29 @@ export default function Page() {
                     </div>
                 </div>
             </div>
+
+            <MyModal id="modalEdit" title="แก้ไขรายการ" modalSize="modal-xl">
+                <div>
+                    <button className="btn btn-primary">
+                        <i className="fa fa-plus me-2"></i>
+                        เพิ่มรายการ
+                    </button>
+                </div>
+
+                <table className="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th style={{ width: '60px' }}></th>
+                            <th>ชื่ออาหาร</th>
+                            <th style={{ width: '200px' }}>รสชาติ</th>
+                            <th style={{ width: '200px' }}>ขนาด</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </MyModal>
         </>
     )
 }
