@@ -196,6 +196,59 @@ export default function Page() {
         }
     }
 
+    const selectTaste = async (tasteId: number, saleTempDetailId: number, saleTempId: number) => {
+        try {
+            const payload = {
+                saleTempDetailId: saleTempDetailId,
+                tasteId: tasteId
+            }
+
+            await axios.put(config.apiServer + '/api/saleTemp/selectTaste', payload);
+            fetchDataSaleTempInfo(saleTempId);
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const unSelectTaste = async (saleTempDetailId: number, saleTempId: number) => {
+        try {
+            const payload = {
+                saleTempDetailId: saleTempDetailId
+            }
+
+            await axios.put(config.apiServer + '/api/saleTemp/unSelectTaste', payload);
+            fetchDataSaleTempInfo(saleTempId);
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const selectSize = async (sizeId: number, saleTempDetailId: number, saleTempId: number) => {
+        try {
+            const payload = {
+                saleTempDetailId: saleTempDetailId,
+                sizeId: sizeId
+            }
+
+            await axios.put(config.apiServer + '/api/saleTemp/selectSize', payload);
+            fetchDataSaleTempInfo(saleTempId);
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
     return (
         <>
             <div className="card mt-3">
@@ -322,12 +375,58 @@ export default function Page() {
                         <tr>
                             <th style={{ width: '60px' }}></th>
                             <th>ชื่ออาหาร</th>
-                            <th style={{ width: '200px' }}>รสชาติ</th>
-                            <th style={{ width: '200px' }}>ขนาด</th>
+                            <th style={{ width: '300px' }} className="text-center">รสชาติ</th>
+                            <th style={{ width: '350px' }} className="text-center">ขนาด</th>
                         </tr>
                     </thead>
                     <tbody>
-
+                        {saleTempDetails.map((item: any) =>
+                            <tr key={item.id}>
+                                <td className="text-center">
+                                    <button className="btn btn-danger">
+                                        <i className="fa fa-times"></i>
+                                    </button>
+                                </td>
+                                <td>{item.Food.name}</td>
+                                <td className="text-center">
+                                    {tastes.map((taste: any) =>
+                                        item.tasteId === taste.id ?
+                                            <button
+                                                onClick={e => unSelectTaste(item.id, item.saleTempId)}
+                                                className="btn btn-danger me-1"
+                                                key={taste.id}>
+                                                {taste.name}
+                                            </button>
+                                            :
+                                            <button
+                                                onClick={e => selectTaste(taste.id, item.id, item.saleTempId)}
+                                                className="btn btn-outline-danger me-1"
+                                                key={taste.id}>
+                                                {taste.name}
+                                            </button>
+                                    )}
+                                </td>
+                                <td className="text-center">
+                                    {sizes.map((size: any) =>
+                                        size.moneyAdded > 0 ?
+                                            item.foodSizeId === size.id ?
+                                                <button
+                                                    className="btn btn-success me-1"
+                                                    key={size.id}>
+                                                    +{size.moneyAdded} {size.name}
+                                                </button>
+                                                :
+                                                <button
+                                                    onClick={e => selectSize(size.id, item.id, item.saleTempId)}
+                                                    className="btn btn-outline-success me-1"
+                                                    key={size.id}>
+                                                    +{size.moneyAdded} {size.name}
+                                                </button>
+                                            : <></>
+                                    )}
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </MyModal>
