@@ -11,9 +11,11 @@ export default function Page() {
     const [foods, setFoods] = useState([]);
     const [saleTemps, setSaleTemps] = useState([]);
     const [amount, setAmount] = useState(0);
+    const [amountAdded, setAmountAdded] = useState(0);
     const [tastes, setTastes] = useState([]);
     const [sizes, setSizes] = useState([]);
     const [saleTempDetails, setSaleTempDetails] = useState([]);
+    const [saleTempId, setSaleTempId] = useState(0);
 
     const myRef = useRef<HTMLInputElement>(null);
 
@@ -81,7 +83,15 @@ export default function Page() {
         try {
             const res = await axios.get(config.apiServer + '/api/saleTemp/list');
             setSaleTemps(res.data.results);
-            sumAmount(res.data.results);
+
+            const results = res.data.results;
+            let sum = 0;
+
+            results.forEach((item: any) => {
+                sum += sumMoneyAdded(item.SaleTempDetails);
+            });
+
+            setAmountAdded(sum);
         } catch (e: any) {
             Swal.fire({
                 title: 'error',
@@ -159,8 +169,8 @@ export default function Page() {
     }
 
     const openModalEdit = (item: any) => {
+        setSaleTempId(item.id);
         genereateSaleTempDetail(item.id);
-        fetchDataSaleTempInfo(item.id);
     }
 
     const genereateSaleTempDetail = async (saleTempId: number) => {
@@ -194,6 +204,17 @@ export default function Page() {
                 icon: 'error'
             })
         }
+    }
+
+    const sumMoneyAdded = (saleTempDetails: any) => {
+        let sum = 0;
+
+        for (let i = 0; i < saleTempDetails.length; i++) {
+            const item = saleTempDetails[i];
+            sum += item.FoodSize?.moneyAdded || 0;
+        }
+
+        return sum;
     }
 
     const selectTaste = async (tasteId: number, saleTempDetailId: number, saleTempId: number) => {
@@ -239,7 +260,44 @@ export default function Page() {
             }
 
             await axios.put(config.apiServer + '/api/saleTemp/selectSize', payload);
-            fetchDataSaleTempInfo(saleTempId);
+            await fetchDataSaleTempInfo(saleTempId);
+            await fetchDataSaleTemp();
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const unSelectSize = async (saleTempDetailId: number, saleTempId: number) => {
+        try {
+            const payload = {
+                saleTempDetailId: saleTempDetailId
+            }
+
+            await axios.put(config.apiServer + '/api/saleTemp/unSelectSize', payload);
+            await fetchDataSaleTempInfo(saleTempId);
+            await fetchDataSaleTemp();
+        } catch (e: any) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const createSaleTempDetail = async () => {
+        try {
+            const payload = {
+                saleTempId: saleTempId
+            }
+
+            await axios.post(config.apiServer + '/api/saleTemp/createSaleTempDetail', payload);
+            await fetchDataSaleTemp();
+            await fetchDataSaleTempInfo(saleTempId);
         } catch (e: any) {
             Swal.fire({
                 title: 'error',
@@ -311,7 +369,7 @@ export default function Page() {
 
                         <div className="col-md-3">
                             <div className="alert p-3 text-end h1 text-white bg-dark">
-                                {amount.toLocaleString('th-TH')}
+                                {(amount + amountAdded).toLocaleString('th-TH')} .-
                             </div>
 
                             {saleTemps.map((item: any) =>
@@ -364,7 +422,7 @@ export default function Page() {
 
             <MyModal id="modalEdit" title="แก้ไขรายการ" modalSize="modal-xl">
                 <div>
-                    <button className="btn btn-primary">
+                    <button onClick={e => createSaleTempDetail()} className="btn btn-primary">
                         <i className="fa fa-plus me-2"></i>
                         เพิ่มรายการ
                     </button>
@@ -411,6 +469,7 @@ export default function Page() {
                                         size.moneyAdded > 0 ?
                                             item.foodSizeId === size.id ?
                                                 <button
+                                                    onClick={e => unSelectSize(item.id, item.saleTempId)}
                                                     className="btn btn-success me-1"
                                                     key={size.id}>
                                                     +{size.moneyAdded} {size.name}
