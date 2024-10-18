@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 interface ModalProps {
     id: string;
     title: string;
-    modalSize: string;
+    modalSize?: string;
     children: ReactNode;
 }
 const Modal: React.FC<ModalProps> = ({ id, title, modalSize, children }) => {
