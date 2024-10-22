@@ -18,6 +18,7 @@ export default function Page() {
     const [saleTempId, setSaleTempId] = useState(0);
     const [payType, setPayType] = useState('cash');
     const [inputMoney, setInputMoney] = useState(0);
+    const [billUrl, setBillUrl] = useState('');
 
     const myRef = useRef<HTMLInputElement>(null);
 
@@ -335,7 +336,13 @@ export default function Page() {
                 userId: Number(localStorage.getItem('next_user_id'))
             }
 
-            await axios.post(config.apiServer + '/api/saleTemp/printBillBeforePay', payload);
+            const res = await axios.post(config.apiServer + '/api/saleTemp/printBillBeforePay', payload);
+            setTimeout(() => {
+                setBillUrl(res.data.fileName);
+
+                const button = document.getElementById('btnPrint') as HTMLButtonElement;
+                button.click();
+            }, 500);
         } catch (e: any) {
             Swal.fire({
                 title: 'error',
@@ -639,6 +646,11 @@ export default function Page() {
                         <button className="btn btn-success btn-block btn-lg">จบการขาย</button>
                     </div>
                 </div>
+            </MyModal>
+
+            <button id="btnPrint" style={{ display: 'none' }} data-bs-toggle="modal" data-bs-target="#modalPrint"></button>
+            <MyModal id="modalPrint" title="พิมพ์เอกสาร">
+                {billUrl && <iframe src={config.apiServer + '/' + billUrl} width="100%" height="600px"></iframe>}
             </MyModal>
         </>
     )
