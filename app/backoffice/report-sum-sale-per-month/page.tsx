@@ -61,7 +61,7 @@ export default function ReportSumSalePerMonth() {
                     </div>
                     <div className="col-md-3">
                         <div>&nbsp;</div>
-                        <button className="btn btn-primary btn-block" onClick={fetchData}>
+                        <button className="btn btn-primary" onClick={fetchData}>
                             <i className="fa fa-search me-2" />
                             แสดงรายการ
                         </button>
@@ -83,6 +83,12 @@ export default function ReportSumSalePerMonth() {
                             </tr>
                         ))}
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>รวม</td>
+                            <td className="text-end">{totalAmount.toLocaleString('th-TH')}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
